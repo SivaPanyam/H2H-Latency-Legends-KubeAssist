@@ -1,72 +1,81 @@
 # ☸️ KubeAssist: Agentic AI Ops Assistant for Kubernetes
 
-> **Your intelligent autopilot for Kubernetes troubleshooting, root cause analysis, and remediation.**
+> **An AI-powered web assistant designed to monitor, diagnose, and remediate local Kubernetes clusters using natural language.**
 
 ---
 
-## 🛑 The Problem: Kubernetes Complexity
-Kubernetes is the backbone of modern infrastructure, but it is notoriously complex. When a deployment fails or a pod is stuck, SREs and DevOps engineers are forced into a high-stress "manual hunt"—sifting through fragmented logs, decoding cryptic `kubectl` outputs, and jumping between dashboards. This process is slow, error-prone, and leads to costly downtime.
+## 📖 Overview
+KubeAssist is a specialized AI agent that acts as an "Autopilot" for Kubernetes SREs. It accepts natural language queries, autonomously gathers cluster data using `kubectl`, reasons over the output, and provides actionable root-cause summaries and fixes.
 
-## 💡 The Solution: KubeAssist
-**KubeAssist** bridges the gap between natural language and cluster management. It is an AI-powered assistant that understands your cluster's state. By simply asking, *"Why is my payment service failing?"*, KubeAssist autonomously explores your cluster, identifies the root cause, and provides step-by-step fix recommendations.
-
----
-
-## 🏗️ Architecture
-KubeAssist is built with a modular, agent-centric architecture designed for transparency and safety.
-
-*   **User Interface (CLI/Web):** A sleek interface for natural language interaction and real-time "thought-stream" visualization.
-*   **AI Agent (LLM + Reasoning):** Powered by LangGraph, the agent uses cyclic reasoning (Plan → Act → Observe) to diagnose issues.
-*   **Tool Layer:** A secure wrapper around the Kubernetes API, `kubectl`, and logs that provides structured JSON data to the agent.
-*   **Environment:** A target Kubernetes cluster (Minikube/kind) populated with microservices and simulated faults.
+This project is built to satisfy the **Agentic AI Ops Assistant for Kubernetes Clusters** challenge, featuring a full agentic loop, fault injection scenarios, and a transparent reasoning web interface.
 
 ---
 
-## 🚀 Advanced Features
-- **Natural Language Queries:** No more memorizing complex `kubectl` flags.
-- **Autonomous Root Cause Analysis (RCA):** Connects the dots between logs, events, and metrics to find the "Why".
-- **Self-Healing Recommendations:** Generates precise `kubectl apply` or `patch` commands with safety checks.
-- **Resource Optimization:** Identifies over-provisioned or throttled containers and suggests right-sizing.
-- **Security Guardrails:** Detects exposed secrets, privileged containers, and misconfigured RBAC.
-- **Multi-turn Memory:** Remembers previous debugging steps for deep-dive sessions.
-- **Transparent Thought-Stream:** Real-time logging of the agent's internal reasoning and tool calls.
+## 🎯 Problem Statement
+Managing complex microservices on Kubernetes often leads to "Alert Fatigue." When a service fails, engineers must manually execute dozens of commands to find the root cause. **KubeAssist** automates this diagnostic journey by translating intent into action.
+
+---
+
+## 🏗️ Architecture & Scope
+KubeAssist is built with a focus on **Transparency** and **Autonomy**:
+
+1.  **Web Interface (React):** A dashboard to chat with the agent and view the "Thought Stream" (real-time tool calls and reasoning).
+2.  **Agentic Loop (LangGraph):** A stateful ReAct loop that plans debugging steps, executes tools, and evaluates observations.
+3.  **Tool Layer:** Custom Python wrappers for `kubectl` that return structured data for the LLM to process.
+4.  **Local Cluster:** Minikube/kind running **Google’s Online Boutique** microservices.
+5.  **Fault Injection Engine:** Scripts to simulate `CrashLoopBackOff`, resource exhaustion, and pending pods.
+
+---
+
+## 🚀 Key Features
+- **Natural Language to Kubectl:** Translates "Why is the cart service slow?" into precise diagnostic commands.
+- **Autonomous Reasoning:** The agent doesn't just run one command; it investigates recursively until it finds a root cause.
+- **Multi-turn Conversation:** Maintains context across questions (e.g., "What about the other namespace?").
+- **Full Transparency Logs:** Every tool call and internal "thought" is displayed in the Web UI.
+- **Actionable Fixes:** Provides the exact `kubectl` commands needed to resolve the detected issue.
 
 ---
 
 ## 🛠️ Tech Stack
-- **LLM Engine:** Google Gemini 1.5 Pro / OpenAI GPT-4o
-- **Agent Framework:** LangGraph (Stateful Orchestration)
-- **Backend:** Python 3.11 / FastAPI
-- **Infrastructure:** Kubernetes (Minikube / kind)
-- **Frontend:** React + Tailwind CSS + WebSockets
+- **LLM:** Google Gemini 1.5 Pro / Ollama
+- **Orchestration:** LangGraph (for complex stateful reasoning)
+- **Backend:** Python + FastAPI (Streaming WebSockets for logs)
+- **Frontend:** React + Tailwind CSS
+- **K8s Environment:** Minikube / kind + Google Online Boutique
 
 ---
 
 ## 🗓️ 6-Day Implementation Plan
 
-### **Day 1: Foundation & LLM Integration**
-*   **Goal:** Setup core backend and LLM connection.
-*   **Tasks:** Initialize FastAPI structure; Implement `LLMService` for structured JSON output; Create basic `kubectl` read-only tool wrappers.
+### **Day 1: Cluster Setup & Fault Injection**
+- [ ] Setup Minikube and deploy **Google’s Online Boutique**.
+- [ ] Create `faults/` directory with YAMLs for: `CrashLoopBackOff`, `Pending` pods, and `OOMKilled`.
+- [ ] Verify cluster health and manual troubleshooting steps.
 
-### **Day 2: Advanced Observation & Tooling**
-*   **Goal:** Enable the agent to see the cluster state comprehensively.
-*   **Tasks:** Build tools for `describe`, `logs`, and `top`; Implement a "Cluster Context Provider" to auto-attach namespace info; Setup a local `kind` cluster with sample apps.
+### **Day 2: Backend Infrastructure & Tooling**
+- [ ] Setup FastAPI server with WebSocket support.
+- [ ] Build the `KubectlToolbox`: Python wrappers for `get`, `describe`, `logs`, and `top`.
+- [ ] Implement input sanitization to prevent destructive commands without approval.
 
-### **Day 3: Agentic Logic with LangGraph**
-*   **Goal:** Implement the "Thinking" loop.
-*   **Tasks:** Define LangGraph `State` (plan, history, observations); Build the **Supervisor Node** (Planner) and **Tool Node** (Executor); Implement the cyclic reasoning loop.
+### **Day 3: The Agentic Loop (LangGraph)**
+- [ ] Define the LangGraph `State` (messages, tool_outputs, current_step).
+- [ ] Create the **Diagnostic Node**: Logic to analyze `kubectl` output and decide next steps.
+- [ ] Connect LLM (Gemini) to the tool-calling loop.
 
-### **Day 4: Domain Expertise & RCA Modules**
-*   **Goal:** Teach the agent to recognize specific failure patterns.
-*   **Tasks:** Implement specialized logic for `CrashLoopBackOff`, `OOMKilled`, and `Pending` pods; Build the "Fix Generator" with confidence scoring.
+### **Day 4: Web Interface (The Command Center)**
+- [ ] Build a React Chat UI.
+- [ ] Implement the **"Reasoning Stream"**: A side panel that shows exactly what `kubectl` commands the agent is running in real-time.
+- [ ] Add a **Cluster Overview** component showing pod status.
 
-### **Day 5: Real-time UI & WebSocket Streaming**
-*   **Goal:** Build the visualization layer.
-*   **Tasks:** Develop the React Chat UI; Implement WebSockets to stream the agent's "Thought-Stream" in real-time; Add "Human-in-the-Loop" approval for fixes.
+### **Day 5: Context & Conversation Memory**
+- [ ] Implement persistence for chat history using LangGraph's `Checkpointer`.
+- [ ] Refine prompts to handle follow-up questions and cross-namespace queries.
+- [ ] Test the "5 distinct diagnostic conversations" requirement.
 
-### **Day 6: Validation, Hardening & Demo**
-*   **Goal:** Ensure robustness and finalize the project.
-*   **Tasks:** Run "Fault Injection" suite (10 scenarios); Implement command validation (prevent hallucinations); Record demo and finalize documentation.
+### **Day 6: Deliverables & Final Polish**
+- [ ] Record the **Working Demo** showing 5 scenarios.
+- [ ] Write the **One-page Report**: "What worked, what didn't, and production scaling (200+ services)".
+- [ ] Finalize `README.md` and push source code.
 
 ---
 
@@ -74,50 +83,22 @@ KubeAssist is built with a modular, agent-centric architecture designed for tran
 ```text
 KubeAssist/
 ├── backend/
-│   ├── agents/             # LangGraph state machine & logic
-│   ├── tools/              # Kubectl & API wrappers
-│   ├── api/                # FastAPI endpoints
-│   └── main.py             # Entry point
-├── frontend/               # React-based Web UI
-├── cli/                    # Python-based CLI tool
-├── k8s/
-│   ├── base-apps/          # Healthy microservices
-│   └── fault-injection/    # YAMLs for broken states
-├── scripts/                # Setup & cluster management
+│   ├── agents/             # LangGraph workflows
+│   ├── tools/              # Kubectl wrappers
+│   ├── faults/             # Fault injection scripts
+│   └── api/                # FastAPI & WebSockets
+├── frontend/               # React UI & Log Streamer
+├── k8s/                    # Online Boutique Manifests
+├── docs/                   # One-page write-up & Demo notes
 └── README.md
 ```
 
 ---
 
-## 🧪 Fault Injection Examples
-Simulate real-world failures to test KubeAssist's diagnostic precision:
-- **CrashLoopBackOff:** `kubectl apply -f k8s/fault-injection/crash-loop.yaml`
-- **Resource Exhaustion:** `kubectl apply -f k8s/fault-injection/oom-kill.yaml`
-- **Network Latency:** `kubectl apply -f k8s/fault-injection/service-latency.yaml`
+## 🏁 Deliverables (Coming Soon)
+- [ ] **Working Demo:** Screen recording of 5 diagnostic scenarios.
+- [ ] **Source Code:** Full repository with setup instructions.
+- [ ] **Technical Write-up:** Analysis of scaling to 200+ services.
 
 ---
-
-## 📊 Sample Output Format
-```json
-{
-  "issue": "Pod 'auth-service' is not running.",
-  "status": "ImagePullBackOff",
-  "root_cause": "The deployment is referencing 'auth-service:v1.2.9', but only 'v1.2.0' exists.",
-  "fix": "kubectl set image deployment/auth-service auth=auth-service:v1.2.0",
-  "confidence": 0.98
-}
-```
-
----
-
-## 📈 Scalability & Future
-- **Context Pruning:** Using RAG to feed only relevant logs to the LLM.
-- **Enterprise Hooks:** Integration with Prometheus, Grafana, and ELK.
-- **Auto-Remediation:** Full autonomous mode for dev clusters.
-
----
-
-## 🏁 Conclusion
-KubeAssist transforms Kubernetes from a complex "black box" into a conversational partner. By automating the cognitive load of debugging, we empower engineers to focus on building features rather than fighting infrastructure.
-
-**KubeAssist: Debugging at the speed of thought.**
+*Built for the H2H-Latency-Legends Hackathon.*
