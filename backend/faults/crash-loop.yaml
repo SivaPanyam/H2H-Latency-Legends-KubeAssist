@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cartservice-fault
+spec:
+  selector:
+    matchLabels:
+      app: cartservice
+  template:
+    metadata:
+      labels:
+        app: cartservice
+    spec:
+      containers:
+      - name: server
+        image: gcr.io/google-samples/microservices-demo/cartservice:v0.10.1
+        env:
+        - name: REDIS_ADDR
+          value: "this-is-not-a-valid-redis-address:6379" # Fault: Invalid redis address causes crash
+        resources:
+          requests:
+            cpu: 200m
+            memory: 64Mi
+          limits:
+            cpu: 300m
+            memory: 128Mi

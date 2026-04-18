@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adservice-fault
+spec:
+  selector:
+    matchLabels:
+      app: adservice
+  template:
+    metadata:
+      labels:
+        app: adservice
+    spec:
+      containers:
+      - name: server
+        image: gcr.io/google-samples/microservices-demo/adservice:v0.10.1
+        resources:
+          requests:
+            cpu: "100" # Fault: Requesting 100 CPUs will make it stay Pending on a local cluster

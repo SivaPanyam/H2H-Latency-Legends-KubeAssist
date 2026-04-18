@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paymentservice-fault
+spec:
+  selector:
+    matchLabels:
+      app: paymentservice
+  template:
+    metadata:
+      labels:
+        app: paymentservice
+    spec:
+      containers:
+      - name: server
+        image: gcr.io/google-samples/microservices-demo/paymentservice:v0.10.1
+        resources:
+          requests:
+            cpu: 100m
+            memory: 2Mi # Fault: Extremely low memory request
+          limits:
+            cpu: 200m
+            memory: 4Mi  # Fault: Extremely low memory limit will cause OOM
