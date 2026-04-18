@@ -52,10 +52,11 @@ KubeAssist is built with a focus on **Transparency**, **Autonomy**, and **Produc
 - [x] **Fault Suite Creation:** Developed YAML scenarios for `CrashLoopBackOff` (cartservice), `OOMKilled` (paymentservice), and `Pending` pods (adservice).
 - [x] **Health Check:** Verified all baseline services reached a "Running" state before fault injection.
 
-### **Day 2: Backend Infrastructure & Cross-Signal Tooling**
-- [ ] Setup FastAPI server with WebSocket support and `requirements.txt`.
-- [ ] Build the `KubectlToolbox`: Python wrappers for `get`, `describe`, `logs`.
-- [ ] Build the `MetricsToolbox`: Wrappers for `kubectl top` or Prometheus queries to enable the agent to see CPU/Memory usage.
+### **Day 2: Backend Infrastructure & Cross-Signal Tooling (Completed ✅)**
+- [x] **FastAPI Core:** Developed the backend server with WebSocket support for real-time "Thought-Stream" visualization.
+- [x] **KubectlToolbox:** Implemented secure Python wrappers for `get pods`, `describe`, `logs`, `events`, and `top pods` (for metric-based correlation).
+- [x] **GitOpsToolbox:** Built a "Shift-Left" remediation tool to draft Git diffs and Pull Requests for human-approved fixes.
+- [x] **Enterprise Frontend Foundation:** Initialized a React + Vite + Tailwind CSS dashboard with a professional Operations Center layout.
 
 ### **Day 3: The Agentic Loop (LangGraph) & Correlation Engine**
 - [ ] Define the LangGraph `State` (messages, tool_outputs, current_step).
