@@ -47,9 +47,10 @@ KubeAssist is built with a focus on **Transparency**, **Autonomy**, and **Produc
 ## 🗓️ 6-Day Implementation Plan
 
 ### **Day 1: Cluster Setup & Fault Injection (Completed ✅)**
-- [x] Setup Minikube and deploy **Google’s Online Boutique**.
-- [x] Create `faults/` directory with YAMLs for: `CrashLoopBackOff`, `Pending` pods, and `OOMKilled`.
-- [x] Verify cluster health and manual troubleshooting steps.
+- [x] **Cluster Initialization:** Successfully set up Minikube with the Windows x64 environment.
+- [x] **Microservices Deployment:** Deployed the full "Google Online Boutique" (11 microservices) for realistic diagnostic testing.
+- [x] **Fault Suite Creation:** Developed YAML scenarios for `CrashLoopBackOff` (cartservice), `OOMKilled` (paymentservice), and `Pending` pods (adservice).
+- [x] **Health Check:** Verified all baseline services reached a "Running" state before fault injection.
 
 ### **Day 2: Backend Infrastructure & Cross-Signal Tooling**
 - [ ] Setup FastAPI server with WebSocket support and `requirements.txt`.
