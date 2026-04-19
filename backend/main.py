@@ -2,6 +2,12 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 import asyncio
 import json
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 from backend.agents.workflow import app as agent_app
 from langchain_core.messages import HumanMessage
 
