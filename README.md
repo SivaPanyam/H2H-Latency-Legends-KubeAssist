@@ -58,10 +58,10 @@ KubeAssist is built with a focus on **Transparency**, **Autonomy**, and **Produc
 - [x] **GitOpsToolbox:** Built a "Shift-Left" remediation tool to draft Git diffs and Pull Requests for human-approved fixes.
 - [x] **Enterprise Frontend Foundation:** Initialized a React + Vite + Tailwind CSS dashboard with a professional Operations Center layout.
 
-### **Day 3: The Agentic Loop (LangGraph) & Correlation Engine**
-- [ ] Define the LangGraph `State` (messages, tool_outputs, current_step).
-- [ ] Create the **Diagnostic Node**: Logic to analyze `kubectl` output and decide next steps.
-- [ ] Implement the **Correlation Logic**: Prompting the LLM to verify findings across logs, metrics, and events.
+### **Day 3: The Agentic Loop (LangGraph) & Correlation Engine (Completed ✅)**
+- [x] **Agent State Definition:** Created a robust `TypedDict` for the agent's memory (conversational history, commands, and observations).
+- [x] **LangGraph Workflow:** Developed the state machine using `StateGraph`, featuring a cyclic Reasoner-Executor loop powered by **Gemini 1.5 Pro**.
+- [x] **API Integration:** Successfully connected the LangGraph workflow to the FastAPI `/api/query` endpoint for end-to-end communication.
 
 ### **Day 4: "Shift-Left" GitOps Remediation**
 - [ ] Build the `GitOpsToolbox`: Ability to read local YAMLs and propose patches.
