@@ -63,10 +63,11 @@ KubeAssist is built with a focus on **Transparency**, **Autonomy**, and **Produc
 - [x] **LangGraph Workflow:** Developed the state machine using `StateGraph`, featuring a cyclic Reasoner-Executor loop powered by **Gemini 1.5 Pro**.
 - [x] **API Integration:** Successfully connected the LangGraph workflow to the FastAPI `/api/query` endpoint for end-to-end communication.
 
-### **Day 4: "Shift-Left" GitOps Remediation**
-- [ ] Build the `GitOpsToolbox`: Ability to read local YAMLs and propose patches.
-- [ ] Implement the "Fix Generator" that outputs a `git diff` or proposes a Pull Request instead of a direct `kubectl apply`.
-- [ ] Refine the agent's confidence scoring before proposing a fix.
+### **Day 4: "Shift-Left" GitOps Remediation (Completed ✅)**
+- [x] **GitOpsToolbox:** Implemented surgical YAML patching for local manifests (supports complex lists like containers/env).
+- [x] **Fix Generator:** Developed the agentic capability to generate `git diffs` and propose Pull Requests instead of direct cluster mutations.
+- [x] **Tool Integration:** Refactored the LangGraph agent to use proper LangChain tool-calling for reliable investigation and remediation.
+
 
 ### **Day 5: Web Interface (The Command Center & Visual Map)**
 - [ ] Build the React Chat UI with a real-time **"Reasoning Stream"** side panel.

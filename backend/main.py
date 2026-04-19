@@ -1,4 +1,5 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import asyncio
 import json
@@ -12,6 +13,14 @@ from backend.agents.workflow import app as agent_app
 from langchain_core.messages import HumanMessage
 
 app = FastAPI(title="KubeAssist API", description="AI Ops Assistant for Kubernetes")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class QueryRequest(BaseModel):
     query: str
@@ -50,3 +59,7 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.send_text(json.dumps({"type": "info", "message": f"KubeAssist is analyzing: {data}"}))
     except WebSocketDisconnect:
         print("Client disconnected")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
