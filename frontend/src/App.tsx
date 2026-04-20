@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Clock
 } from 'lucide-react';
+import ClusterMap from './components/ClusterMap';
 
 const SidebarItem = ({ icon: Icon, label, active = false }: { icon: any, label: string, active?: boolean }) => (
   <div className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all ${active ? 'bg-accent/10 text-accent' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'}`}>
@@ -27,6 +28,7 @@ const App: React.FC = () => {
   ]);
   const [reasoningLogs, setReasoningLogs] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [activeService, setActiveService] = useState<string | undefined>();
   const ws = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -35,6 +37,16 @@ const App: React.FC = () => {
       const data = JSON.parse(event.data);
       if (data.type === 'info') {
         setReasoningLogs(prev => [...prev, data.message]);
+        
+        // fallback heuristic if update_map wasn't sent
+        const words = data.message.split(/[\s'"_\\-]+/);
+        for (let word of words) {
+          if ((word.includes('service') || word.includes('redis') || word.includes('frontend')) && word.length > 5) {
+             setActiveService(word);
+          }
+        }
+      } else if (data.type === 'update_map') {
+        setActiveService(data.resource);
       }
     };
     return () => ws.current?.close();
@@ -65,6 +77,7 @@ const App: React.FC = () => {
       setMessages(prev => [...prev, { role: 'agent', content: 'Error communicating with backend.' }]);
     } finally {
       setLoading(false);
+      setActiveService(undefined);
     }
   };
 
@@ -108,19 +121,8 @@ const App: React.FC = () => {
 
         <div className="flex-1 flex overflow-hidden">
           <section className="flex-1 p-6 flex flex-col gap-6 overflow-y-auto custom-scrollbar">
-            <div className="grid grid-cols-3 gap-4 h-32">
-              <div className="bg-sidebar/50 border border-border rounded-xl p-4 flex flex-col justify-center">
-                <span className="text-xs text-muted font-medium mb-1">CPU UTILIZATION</span>
-                <span className="text-2xl font-bold font-mono">14.2%</span>
-              </div>
-              <div className="bg-sidebar/50 border border-border rounded-xl p-4 flex flex-col justify-center">
-                <span className="text-xs text-muted font-medium mb-1">MEMORY PRESSURE</span>
-                <span className="text-2xl font-bold font-mono text-success">42.8%</span>
-              </div>
-              <div className="bg-sidebar/50 border border-border rounded-xl p-4 flex flex-col justify-center">
-                <span className="text-xs text-muted font-medium mb-1">ACTIVE SERVICES</span>
-                <span className="text-2xl font-bold font-mono">11/11</span>
-              </div>
+            <div className="h-64 bg-sidebar/30 border border-border rounded-2xl overflow-hidden shrink-0">
+              <ClusterMap activeService={activeService} />
             </div>
 
             <div className="flex-1 bg-sidebar/30 border border-border rounded-2xl relative p-6 flex flex-col overflow-hidden">

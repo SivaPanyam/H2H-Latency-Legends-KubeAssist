@@ -2,9 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --background: #09090b;
+  --sidebar: #121214;
+  --accent: #0284c7;
+  --border: #27272a;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --muted: #a1a1aa;
+}
+
 @layer base {
   body {
-    @apply bg-background text-zinc-100 antialiased overflow-hidden selection:bg-accent selection:bg-opacity-30;
+    @apply bg-background text-zinc-100 antialiased overflow-hidden selection:bg-accent selection:bg-opacity-30 font-sans;
   }
 }
 
@@ -16,4 +27,20 @@
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
   @apply bg-zinc-800 rounded-full hover:bg-zinc-700 transition-colors;
+}
+
+.xyflow__background {
+  @apply bg-sidebar/50;
+}
+
+.xyflow__node {
+  @apply shadow-lg !transition-all !duration-500;
+}
+
+.xyflow__edge-path {
+  @apply !stroke-zinc-800 !stroke-1;
+}
+
+.xyflow__controls-button {
+  @apply !bg-zinc-900 !border-zinc-800 !fill-zinc-400 hover:!bg-zinc-800;
 }

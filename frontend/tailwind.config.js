@@ -7,16 +7,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#0a0a0c',
-        sidebar: '#111114',
-        accent: '#3b82f6',
-        danger: '#ef4444',
-        success: '#22c55e',
-        muted: '#71717a',
-        border: '#1f1f23',
+        background: '#09090b',
+        sidebar: '#121214',
+        accent: '#0284c7',
+        border: '#27272a',
+        success: '#10b981',
+        warning: '#f59e0b',
+        error: '#ef4444',
+        muted: '#a1a1aa',
       },
       fontFamily: {
         mono: ['JetBrains Mono', 'monospace'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       }
     },
   },

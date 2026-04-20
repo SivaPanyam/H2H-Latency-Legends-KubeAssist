@@ -35,7 +35,18 @@ def reasoner_node(state: AgentState):
     """
     messages = [SystemMessage(content=SYSTEM_PROMPT)] + state["messages"]
     response = llm_with_tools.invoke(messages)
-    return {"messages": [response]}
+    
+    # Try to extract a target resource from the tool calls
+    target_resource = state.get("target_resource")
+    if hasattr(response, "tool_calls") and response.tool_calls:
+        for tool_call in response.tool_calls:
+            args = tool_call.get("args", {})
+            if "pod_name" in args:
+                target_resource = {"type": "pod", "name": args["pod_name"]}
+            elif "resource_name" in args:
+                target_resource = {"type": "resource", "name": args["resource_name"]}
+    
+    return {"messages": [response], "target_resource": target_resource}
 
 # Define the Graph
 workflow = StateGraph(AgentState)
