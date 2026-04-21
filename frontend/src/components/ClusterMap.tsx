@@ -41,11 +41,18 @@ const initialEdges = [
 
 interface ClusterMapProps {
   activeService?: string;
+  onNodeClick?: (nodeId: string) => void;
 }
 
-export default function ClusterMap({ activeService }: ClusterMapProps) {
+export default function ClusterMap({ activeService, onNodeClick }: ClusterMapProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  const handleNodeClick = (_: any, node: any) => {
+    if (onNodeClick) {
+      onNodeClick(node.id);
+    }
+  };
 
   // Update node styles based on activeService
   useMemo(() => {
@@ -76,6 +83,7 @@ export default function ClusterMap({ activeService }: ClusterMapProps) {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onNodeClick={handleNodeClick}
         fitView
         colorMode="dark"
       >

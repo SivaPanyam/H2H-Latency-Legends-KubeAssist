@@ -5,11 +5,11 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: paymentservice
+      app: paymentservice-fault
   template:
     metadata:
       labels:
-        app: paymentservice
+        app: paymentservice-fault
     spec:
       containers:
       - name: server
@@ -17,7 +17,7 @@ spec:
         resources:
           requests:
             cpu: 100m
-            memory: 2Mi # Fault: Extremely low memory request
+            memory: 6Mi
           limits:
             cpu: 200m
-            memory: 4Mi  # Fault: Extremely low memory limit will cause OOM
+            memory: 8Mi # Slightly higher to bypass docker minimum, but still likely to OOM

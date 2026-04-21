@@ -5,11 +5,11 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: cartservice
+      app: cartservice-fault
   template:
     metadata:
       labels:
-        app: cartservice
+        app: cartservice-fault
     spec:
       containers:
       - name: server

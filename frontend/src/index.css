@@ -1,21 +1,19 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --background: #09090b;
-  --sidebar: #121214;
-  --accent: #0284c7;
-  --border: #27272a;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --error: #ef4444;
-  --muted: #a1a1aa;
+@theme {
+  --color-background: #09090b;
+  --color-sidebar: #121214;
+  --color-accent: #0284c7;
+  --color-border: #27272a;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-muted: #a1a1aa;
 }
 
 @layer base {
   body {
-    @apply bg-background text-zinc-100 antialiased overflow-hidden selection:bg-accent selection:bg-opacity-30 font-sans;
+    @apply bg-background text-zinc-100 antialiased overflow-hidden selection:bg-accent/30 font-sans;
   }
 }
 

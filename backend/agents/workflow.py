@@ -1,6 +1,6 @@
 import os
-from typing import Dict, Any, List, Literal
-from langgraph.graph import StateGraph, END
+from typing import Dict, Any, List, Literal, Optional
+from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
@@ -9,9 +9,8 @@ from backend.agents.state import AgentState
 from backend.agents.tools import all_tools
 
 # Initialize LLM & Tools
-# We use a placeholder for the API key if not present to avoid crashes during import/testing
 api_key = os.getenv("GOOGLE_API_KEY") or "placeholder"
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0, google_api_key=api_key)
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0, google_api_key=api_key)
 llm_with_tools = llm.bind_tools(all_tools)
 
 SYSTEM_PROMPT = """You are KubeAssist, a Production-Grade AI Ops Assistant.
@@ -46,7 +45,10 @@ def reasoner_node(state: AgentState):
             elif "resource_name" in args:
                 target_resource = {"type": "resource", "name": args["resource_name"]}
     
-    return {"messages": [response], "target_resource": target_resource}
+    return {
+        "messages": [response],
+        "target_resource": target_resource
+    }
 
 # Define the Graph
 workflow = StateGraph(AgentState)
@@ -56,15 +58,22 @@ workflow.add_node("reasoner", reasoner_node)
 workflow.add_node("tools", ToolNode(all_tools))
 
 # Add Edges
-workflow.set_entry_point("reasoner")
+workflow.add_edge(START, "reasoner")
 
-def should_continue(state: AgentState) -> Literal["tools", "__end__"]:
+def should_continue(state: AgentState) -> Literal["tools", "end"]:
     last_message = state["messages"][-1]
     if hasattr(last_message, "tool_calls") and last_message.tool_calls:
         return "tools"
-    return END
+    return "end"
 
-workflow.add_conditional_edges("reasoner", should_continue)
+workflow.add_conditional_edges(
+    "reasoner", 
+    should_continue,
+    {
+        "tools": "tools",
+        "end": END
+    }
+)
 workflow.add_edge("tools", "reasoner")
 
 # Compile
