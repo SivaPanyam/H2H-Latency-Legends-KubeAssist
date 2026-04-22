@@ -54,4 +54,4 @@ def test_should_continue_logic():
     state_end: AgentState = {
         "messages": [AIMessage(content="Final diagnosis: everything is fine.")]
     }
-    assert should_continue(state_end) == "__end__"
+    assert should_continue(state_end) == "end"
