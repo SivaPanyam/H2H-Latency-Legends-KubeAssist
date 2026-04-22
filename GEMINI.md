@@ -1,52 +1,53 @@
 # ☸️ KubeAssist: Agentic AI Ops Assistant for Kubernetes
 
-KubeAssist is an AI-powered "Autopilot" for Kubernetes SREs, designed to automate the diagnostic journey by translating natural language intent into actionable cluster operations and "Shift-Left" remediations.
+KubeAssist is a Production-Grade AI "Autopilot" for Kubernetes SREs. It transforms the traditionally manual diagnostic process into an automated, multi-signal reasoning journey, enabling engineers to manage complex microservices with unprecedented speed and safety.
+
+## 🌟 The Core "Meaning" of KubeAssist
+KubeAssist is built on the philosophy of **Operational Intelligence**. It isn't just a chatbot; it is a dual-mode system that bridges the gap between raw cluster telemetry and human-codified remediation.
+1.  **Proactive Audit**: Scans the entire cluster state (Security, Performance, Config) in one shot to find "hidden" risks.
+2.  **Reactive Assistance**: Acts as an expert pair-programmer for SREs to root-cause active incidents and generate GitOps-ready fixes.
+
+---
 
 ## 🏗️ System Architecture
 
-### 1. Agentic Loop (LangGraph)
-The core of KubeAssist is a stateful agentic loop implemented with **LangGraph**.
-- **Reasoner Node**: Powered by **Gemini 1.5 Pro**, it plans investigation steps, analyzes tool outputs, and performs cross-signal correlation.
-- **Tool Node**: Executes specialized Python wrappers for cluster interaction.
-- **State Management**: Uses a `TypedDict` to maintain conversational history, command logs, observations, and diagnostic plans.
+### 1. The Reasoning Engine (LangGraph)
+The heart of KubeAssist is a stateful agentic loop powered by **Gemini 2.5 Flash**.
+- **Context-Aware Planning**: Uses a massive context window to ingest logs, metrics, and events simultaneously.
+- **Agentic ReAct Loop**: Autonomously decides which tools to call, evaluates their output, and adjusts its plan in real-time.
+- **Shift-Left Mandate**: The agent is hard-coded to prefer GitOps (Pull Requests) over direct cluster mutations (`kubectl apply`), ensuring system integrity.
 
-### 2. Tooling & Capabilities
-- **KubectlToolbox**: Secure wrappers for `get pods`, `describe`, `logs`, `events`, and `top pods`. It parses raw output into structured JSON for the LLM.
-- **ClusterScanner**: Orchestrates comprehensive data gathering across the entire cluster, including metrics and external security scans (Trivy).
-- **GitOpsToolbox**: Enables "Shift-Left" remediation by:
-  - Applying patches to local YAML manifests in-memory.
-  - Generating standard `git diff` outputs.
-  - Proposing simulated Pull Requests to prevent configuration drift.
+### 2. Operational Intelligence Layers
+- **Interactive Cluster Map**: Visualizes the microservices topology with real-time node selection.
+- **Deep Telemetry Streaming**: Selecting a pod in the UI triggers an automated data-fetch of:
+    - **Live Metrics**: CPU and Memory consumption via `kubectl top`.
+    - **Log Streamer**: The latest 20-50 lines of pod logs.
+    - **Lifecycle Events**: Critical K8s events (Warnings, Pulled, Created, Failed).
+- **Performance Dashboard**: A cluster-wide monitoring view that identifies top resource consumers and node utilization bottlenecks.
 
-### 3. Backend Infrastructure (FastAPI)
-- **REST API**: 
-  - `/api/query`: Interactive agentic reasoning.
-  - `/api/scan-cluster`: Comprehensive one-shot cluster audit using Gemini's large context window.
-  - `/api/apply-fix`: Direct GitOps remediation for identified issues.
-- **WebSockets**: `/ws/stream` for real-time broadcasting of the agent's "Thought Stream" and status updates to the frontend.
+### 3. Comprehensive One-Shot Audit
+A specialized pipeline that aggregates:
+- **Trivy Security Scans**: Scans images and configurations for vulnerabilities.
+- **Configuration Drift**: Compares live resources against target manifests.
+- **Resource Efficiency**: Identifies over-provisioned or throttled services.
 
-### 4. Frontend (React + React Flow)
-- **Operations Dashboard**: A professional dark-mode UI built with Tailwind CSS.
-- **Visual Cluster Map**: Uses **React Flow** to visualize the microservices topology.
-- **Security Audit Center**: A specialized dashboard to trigger full cluster scans, view categorized issues (Performance, Security, Config), and trigger GitOps fixes with a single click.
-- **Live Reasoning Stream**: A side panel that displays real-time logs from the agent as it navigates the cluster.
+---
 
-## 🛠️ Tech Stack
-- **LLM**: Google Gemini 1.5 Pro (via LangChain)
-- **Orchestration**: LangGraph
-- **Backend**: Python 3.12 + FastAPI + Uvicorn
-- **Frontend**: React 18 + Vite + TypeScript + Tailwind CSS
-- **Visualization**: React Flow
-- **K8s Environment**: Minikube / kind with Online Boutique microservices
+## 🛠️ Updated Tech Stack
+- **LLM**: **Google Gemini 2.5 Flash** (Optimized for speed and long-context reasoning)
+- **Backend**: FastAPI + Python 3.12 (Asynchronous Telemetry Aggregation)
+- **Frontend**: React 18 + TypeScript + Tailwind CSS (Operations Center Layout)
+- **Visualization**: React Flow (Dynamic Topology Graphing)
+- **Tooling**: trivy, kubectl, GitOps-Toolbox
+
+---
 
 ## 📂 Project Structure
-- `backend/agents/`: LangGraph state, tools, and workflow definitions.
-- `backend/tools/`: Core logic for interacting with K8s and GitOps.
-- `backend/faults/`: YAML scenarios for OOM, CrashLoopBackOff, and Pending pod failures.
-- `frontend/src/components/ClusterMap.tsx`: React Flow implementation for the visual topology.
-- `k8s/`: Kubernetes manifests for the target microservices.
+- `backend/api/`: Structured FastAPI routers and WebSocket managers.
+- `backend/tools/scanner.py`: Orchestrates the "Big Gulp" data gathering for audits.
+- `backend/tools/gitops_toolbox.py`: Generates standard Git diffs for remediation.
+- `frontend/src/App.tsx`: The unified dashboard managing Map, Assistant, Audit, and Performance modes.
 
 ## 🚀 Key Workflows
-1. **Detection**: Agent scans the namespace for unhealthy pods.
-2. **Correlation**: Agent gathers logs, describes events, and checks resource metrics to find the root cause.
-3. **Remediation**: Agent proposes a fix by generating a git diff and drafting a Pull Request, adhering to GitOps best practices.
+1. **One-Shot Audit**: Aggregates full cluster context -> Gemini analyzes all signals -> Categorized Report -> One-click GitOps Fix.
+2. **Deep-Dive Investigation**: User selects a pod -> Real-time telemetry streams to sidebar -> User initiates chat -> Agent proposes surgical fix via PR.
