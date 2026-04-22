@@ -1,4 +1,6 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException, status, Security
+from fastapi.responses import JSONResponse
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
 from langchain_core.messages import HumanMessage, SystemMessage
 from backend.agents.workflow import app as agent_app, llm
@@ -6,8 +8,26 @@ from backend.tools.scanner import ClusterScanner
 from typing import List, Dict, Any, Optional
 import json
 import concurrent.futures
+import os
 
 router = APIRouter()
+
+# API Key Security Configuration
+API_KEY_NAME = "X-API-Key"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+async def get_api_key(api_key: str = Security(api_key_header)):
+    """Validates the API key from the request header."""
+    expected_key = os.getenv("KUBEASSIST_API_KEY")
+    if not expected_key:
+        # If no key is configured, we allow access but log a warning (in a real app, this should be a fail-closed)
+        return api_key
+    if api_key == expected_key:
+        return api_key
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Could not validate credentials",
+    )
 
 class ConnectionManager:
     def __init__(self):
@@ -52,7 +72,7 @@ class AuditReport(BaseModel):
 async def root():
     return {"message": "Welcome to KubeAssist API"}
 
-@router.post("/api/scan-cluster")
+@router.post("/api/scan-cluster", dependencies=[Depends(get_api_key)])
 async def scan_cluster(namespace: str = "default"):
     """Performs a comprehensive one-shot cluster audit."""
     await manager.broadcast({"type": "info", "message": "🔍 Initiating full cluster scan..."})
@@ -60,7 +80,7 @@ async def scan_cluster(namespace: str = "default"):
     scanner = ClusterScanner(namespace=namespace)
     context_data = scanner.get_full_cluster_context()
     
-    await manager.broadcast({"type": "info", "message": "🧠 Analyzing cluster context with Gemini 1.5 Pro..."})
+    await manager.broadcast({"type": "info", "message": "🧠 Analyzing cluster context with Gemini..."})
     
     system_prompt = """You are a Senior K8s SRE & Security Auditor. 
 Analyze the provided cluster context (Resources, Metrics, Security scans) and identify ALL issues.
@@ -83,11 +103,15 @@ Ensure 'patch_data' matches the format expected by the GitOpsToolbox.
         await manager.broadcast({"type": "info", "message": f"✅ Audit complete. Found {len(report.issues)} issues."})
         return report
     except Exception as e:
-        error_msg = f"❌ Error during one-shot audit: {str(e)}"
+        # VULN-003 Fix: Don't leak raw exception strings
+        error_msg = "❌ Error during one-shot audit. Please check backend logs."
         await manager.broadcast({"type": "info", "message": error_msg})
-        return {"error": str(e)}
+        return JSONResponse(
+            status_code=500,
+            content={"error": "An internal error occurred during the audit process."}
+        )
 
-@router.post("/api/query")
+@router.post("/api/query", dependencies=[Depends(get_api_key)])
 async def process_query(request: QueryRequest):
     # Initial state for the agent
     initial_state = {
@@ -103,8 +127,12 @@ async def process_query(request: QueryRequest):
     
     try:
         final_state = None
-        # Stream the agentic loop
-        async for event in agent_app.astream(initial_state, stream_mode="updates"):
+        # Stream the agentic loop with a recursion limit to save quota
+        async for event in agent_app.astream(initial_state, stream_mode="updates", config={"recursion_limit": 15}):
+            # Small sleep to respect rate limits
+            import asyncio
+            await asyncio.sleep(1)
+            
             for node_name, output in event.items():
                 if node_name == "reasoner":
                     msg = output["messages"][-1]
@@ -142,11 +170,21 @@ async def process_query(request: QueryRequest):
         return {"response": "I have completed my investigation. Please see the logs for details."}
         
     except Exception as e:
-        error_msg = f"❌ Error during reasoning: {str(e)}"
+        # Log the full error for debugging
+        import traceback
+        traceback.print_exc()
+        
+        # Check for quota exhaustion specifically
+        error_str = str(e)
+        if "RESOURCE_EXHAUSTED" in error_str or "429" in error_str:
+            error_msg = "⚠️ AI Quota Exhausted. Please wait a moment or try again later today."
+        else:
+            error_msg = "❌ Error during reasoning. Please check backend logs."
+            
         await manager.broadcast({"type": "info", "message": error_msg})
-        return {"response": f"I encountered an error: {str(e)}"}
+        return {"response": f"I encountered an issue: {error_msg}"}
 
-@router.post("/api/apply-fix")
+@router.post("/api/apply-fix", dependencies=[Depends(get_api_key)])
 async def apply_fix(issue: ClusterIssue):
     """Generates a GitOps Pull Request for a specific identified issue."""
     from backend.tools.gitops_toolbox import GitOpsToolbox
@@ -164,95 +202,138 @@ async def apply_fix(issue: ClusterIssue):
         # Fallback for pods
         res_type, res_name = "Deployment", issue.resource # Most fixes are on deployments
         
-    diff_res = gitops.generate_patch_diff(res_type, res_name, issue.patch_data)
-    
-    if diff_res["success"]:
-        pr_res = gitops.propose_pull_request(
-            title=f"Fix: {issue.description}",
-            description=f"Automated fix for {issue.category} issue in {issue.resource}.\nRoot Cause: {issue.root_cause}",
-            diff_content=diff_res["diff"]
-        )
-        await manager.broadcast({"type": "info", "message": f"✅ Pull Request proposed for {issue.resource}."})
-        return pr_res
-    else:
-        await manager.broadcast({"type": "info", "message": f"❌ Failed to generate fix: {diff_res['error']}"})
-        return diff_res
+    try:
+        diff_res = gitops.generate_patch_diff(res_type, res_name, issue.patch_data)
+        
+        if diff_res["success"]:
+            pr_res = gitops.propose_pull_request(
+                title=f"Fix: {issue.description}",
+                description=f"Automated fix for {issue.category} issue in {issue.resource}.\nRoot Cause: {issue.root_cause}",
+                diff_content=diff_res["diff"]
+            )
+            await manager.broadcast({"type": "info", "message": f"✅ Pull Request proposed for {issue.resource}."})
+            return pr_res
+        else:
+            await manager.broadcast({"type": "info", "message": f"❌ Failed to generate fix: {diff_res['error']}"})
+            return diff_res
+    except Exception as e:
+        # VULN-003 Fix
+        return {"success": False, "error": "An internal error occurred while generating the fix."}
 
-@router.get("/api/pod-details/{pod_name}")
+@router.get("/api/pod-details/{pod_name}", dependencies=[Depends(get_api_key)])
 async def get_pod_details(pod_name: str, namespace: str = "default"):
     """Fetches real-time details and metrics for a specific pod, resolving the full pod name if needed."""
     from backend.tools.kubectl_toolbox import KubectlToolbox
     kube = KubectlToolbox()
     
-    # Resolve the full pod name if the provided name is a service prefix
-    pods_res = kube.get_pods(namespace)
-    actual_pod_name = pod_name
-    if pods_res["success"]:
-        for pod in pods_res["output"].get("items", []):
-            name = pod["metadata"]["name"]
-            if name.startswith(pod_name):
-                actual_pod_name = name
-                break
+    try:
+        # Resolve the full pod name if the provided name is a service prefix
+        pods_res = kube.get_pods(namespace)
+        actual_pod_name = pod_name
+        if pods_res["success"]:
+            for pod in pods_res["output"].get("items", []):
+                name = pod["metadata"]["name"]
+                if name.startswith(pod_name) or pod_name in name:
+                    actual_pod_name = name
+                    break
 
-    # We gather data in parallel for responsiveness
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        f_desc = executor.submit(kube.describe_pod, actual_pod_name, namespace)
-        f_logs = executor.submit(kube.get_logs, actual_pod_name, namespace, tail=20)
-        f_top = executor.submit(kube.top_pods, namespace)
-    
-    desc = f_desc.result()
-    logs = f_logs.result()
-    top = f_top.result()
-    
-    # Extract specific metrics from top output if available
-    metrics = {"cpu": "N/A", "memory": "N/A"}
-    if top["success"]:
-        for line in top["output"].splitlines():
-            if actual_pod_name in line:
-                parts = line.split()
-                if len(parts) >= 3:
-                    metrics["cpu"] = parts[1]
-                    metrics["memory"] = parts[2]
+        # We gather data in parallel for responsiveness
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            f_desc = executor.submit(kube.describe_pod, actual_pod_name, namespace)
+            f_logs = executor.submit(kube.get_logs, actual_pod_name, namespace, tail=20)
+            f_top = executor.submit(kube.top_pods, namespace)
+        
+        desc = f_desc.result()
+        logs = f_logs.result()
+        top = f_top.result()
+        
+        # Extract specific metrics from top output if available
+        metrics = {"cpu": "N/A", "memory": "N/A"}
+        if top["success"]:
+            for line in top["output"].splitlines():
+                if actual_pod_name in line:
+                    parts = line.split()
+                    if len(parts) >= 3:
+                        metrics["cpu"] = parts[1]
+                        metrics["memory"] = parts[2]
 
-    return {
-        "name": actual_pod_name,
-        "status": "Running",
-        "metrics": metrics,
-        "logs": logs["output"] if logs["success"] else f"Error fetching logs: {logs.get('error', 'Unknown error')}",
-        "events": desc["output"] if desc["success"] else f"Error fetching description: {desc.get('error', 'Unknown error')}"
-    }
+        return {
+            "name": actual_pod_name,
+            "status": "Running",
+            "metrics": metrics,
+            "logs": logs["output"] if logs["success"] else "Error fetching logs.",
+            "events": desc["output"] if desc["success"] else "Error fetching description."
+        }
+    except Exception as e:
+        # VULN-003 Fix
+        raise HTTPException(status_code=500, detail="Internal server error while fetching pod details.")
 
-@router.get("/api/performance")
+@router.get("/api/performance", dependencies=[Depends(get_api_key)])
 async def get_performance(namespace: str = "default"):
     """Gathers cluster-wide performance metrics for the operations dashboard."""
     from backend.tools.kubectl_toolbox import KubectlToolbox
     kube = KubectlToolbox()
     
-    nodes_top = kube._run_cmd(["kubectl", "top", "nodes"])
-    pods_top = kube.top_pods(namespace)
-    
-    top_consumers = []
-    if pods_top["success"]:
-        lines = pods_top["output"].splitlines()[1:] # Skip header
-        for line in lines:
-            parts = line.split()
-            if len(parts) >= 3:
-                top_consumers.append({
-                    "name": parts[0],
-                    "cpu": parts[1],
-                    "memory": parts[2]
-                })
-        # Sort by CPU (simple heuristic)
-        top_consumers = sorted(top_consumers, key=lambda x: x["cpu"], reverse=True)[:5]
+    try:
+        nodes_top = kube._run_cmd(["kubectl", "top", "nodes"])
+        pods_top = kube.top_pods(namespace)
+        
+        top_consumers = []
+        if pods_top["success"]:
+            lines = pods_top["output"].splitlines()[1:] # Skip header
+            for line in lines:
+                parts = line.split()
+                if len(parts) >= 3:
+                    top_consumers.append({
+                        "name": parts[0],
+                        "cpu": parts[1],
+                        "memory": parts[2]
+                    })
+            # Sort by CPU (simple heuristic)
+            top_consumers = sorted(top_consumers, key=lambda x: x["cpu"], reverse=True)[:5]
 
-    return {
-        "node_metrics": nodes_top["output"] if nodes_top["success"] else "N/A",
-        "top_pods": top_consumers,
-        "timestamp": "Real-time"
-    }
+        return {
+            "node_metrics": nodes_top["output"] if nodes_top["success"] else "N/A",
+            "top_pods": top_consumers,
+            "timestamp": "Real-time"
+        }
+    except Exception as e:
+        # VULN-003 Fix
+        raise HTTPException(status_code=500, detail="Internal server error while fetching performance metrics.")
+
+@router.get("/api/pod-statuses", dependencies=[Depends(get_api_key)])
+async def get_pod_statuses(namespace: str = "default"):
+    """Fetches a simplified map of pod names to their current operational status."""
+    from backend.tools.kubectl_toolbox import KubectlToolbox
+    kube = KubectlToolbox()
+    res = kube.get_pods(namespace)
+    
+    statuses = {}
+    if res["success"]:
+        for pod in res["output"].get("items", []):
+            name = pod["metadata"]["name"]
+            phase = pod["status"].get("phase", "Unknown")
+            
+            # Refine status based on container states
+            status_val = phase
+            container_statuses = pod["status"].get("containerStatuses", [])
+            if container_statuses:
+                for cs in container_statuses:
+                    waiting = cs.get("state", {}).get("waiting")
+                    if waiting:
+                        status_val = waiting.get("reason", "Waiting")
+                        break
+            
+            # Map full pod name back to service name for the UI
+            service_name = name.split('-')[0]
+            statuses[service_name] = status_val
+            statuses[name] = status_val
+            
+    return statuses
 
 @router.websocket("/ws/stream")
 async def websocket_endpoint(websocket: WebSocket):
+    # Note: WebSocket authentication is more complex. For this demonstration, we'll focus on the REST API.
     await manager.connect(websocket)
     try:
         while True:

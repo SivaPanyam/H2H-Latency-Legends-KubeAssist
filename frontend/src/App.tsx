@@ -76,10 +76,27 @@ const App: React.FC = () => {
   const [auditReport, setAuditReport] = useState<AuditReport | null>(null);
   const [selectedPod, setSelectedPod] = useState<PodDetails | null>(null);
   const [performanceData, setPerformanceData] = useState<PerformanceData | null>(null);
+  const [podStatuses, setPodStatuses] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const ws = useRef<WebSocket | null>(null);
 
+  const fetchPodStatuses = async () => {
+    try {
+      const res = await fetch('http://localhost:8110/api/pod-statuses', {
+        headers: { 'X-API-Key': import.meta.env.VITE_KUBEASSIST_API_KEY || '' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPodStatuses(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch pod statuses", err);
+    }
+  };
+
   useEffect(() => {
+    fetchPodStatuses();
+    const interval = setInterval(fetchPodStatuses, 5000);
     ws.current = new WebSocket('ws://localhost:8110/ws/stream');
     ws.current.onmessage = (event) => {
       try {
@@ -93,7 +110,10 @@ const App: React.FC = () => {
         console.error("WS Message Error", err);
       }
     };
-    return () => ws.current?.close();
+    return () => {
+      ws.current?.close();
+      if (interval) clearInterval(interval);
+    };
   }, []);
 
   const fetchPodDetails = async (podName: string) => {
@@ -101,7 +121,9 @@ const App: React.FC = () => {
     setSelectedPod(null);
     setError(null);
     try {
-      const res = await fetch(`http://localhost:8110/api/pod-details/${podName}`);
+      const res = await fetch(`http://localhost:8110/api/pod-details/${podName}`, {
+        headers: { 'X-API-Key': import.meta.env.VITE_KUBEASSIST_API_KEY || '' }
+      });
       if (!res.ok) throw new Error("Failed to fetch pod details");
       const data = await res.json();
       setSelectedPod(data);
@@ -118,7 +140,9 @@ const App: React.FC = () => {
     setError(null);
     setActiveTab('performance');
     try {
-      const res = await fetch('http://localhost:8110/api/performance');
+      const res = await fetch('http://localhost:8110/api/performance', {
+        headers: { 'X-API-Key': import.meta.env.VITE_KUBEASSIST_API_KEY || '' }
+      });
       if (!res.ok) throw new Error("Failed to fetch performance metrics");
       const data = await res.json();
       setPerformanceData(data);
@@ -142,7 +166,10 @@ const App: React.FC = () => {
     try {
       const res = await fetch('http://localhost:8110/api/query', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-API-Key': import.meta.env.VITE_KUBEASSIST_API_KEY || ''
+        },
         body: JSON.stringify({ query: userQuery, namespace: 'default' })
       });
       
@@ -163,7 +190,8 @@ const App: React.FC = () => {
     setActiveTab('audit');
     try {
       const res = await fetch('http://localhost:8110/api/scan-cluster?namespace=default', {
-        method: 'POST'
+        method: 'POST',
+        headers: { 'X-API-Key': import.meta.env.VITE_KUBEASSIST_API_KEY || '' }
       });
       if (!res.ok) throw new Error("Cluster audit failed");
       const data = await res.json();
@@ -181,7 +209,10 @@ const App: React.FC = () => {
     try {
       const res = await fetch('http://localhost:8110/api/apply-fix', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-API-Key': import.meta.env.VITE_KUBEASSIST_API_KEY || ''
+        },
         body: JSON.stringify(issue)
       });
       const data = await res.json();
@@ -245,6 +276,7 @@ const App: React.FC = () => {
                 <div className="flex-1 bg-sidebar/30 border border-border rounded-2xl overflow-hidden shadow-2xl relative">
                   <ClusterMap 
                     activeService={activeService} 
+                    podStatuses={podStatuses}
                     onNodeClick={(id) => fetchPodDetails(id)} 
                   />
                   {!selectedPod && !loading && (
