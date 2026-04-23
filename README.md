@@ -117,11 +117,33 @@ kubectl apply -f backend/faults/oom-kill.yaml
 
 ## 📂 Project Structure
 
-- `backend/agents/`: LangGraph workflows and reasoning logic.
-- `backend/tools/`: Custom wrappers for `kubectl`, `metrics`, and `GitOps`.
-- `backend/faults/`: YAML manifests for simulating production failures.
-- `frontend/src/App.tsx`: Unified dashboard managing Map and Assistant modes.
-- `k8s/`: Base manifests for the microservices environment.
+```text
+H2H-Latency-Legends-KubeAssist/
+├── backend/
+│   ├── agents/             # LangGraph workflows (state, tools, workflow)
+│   ├── api/                # FastAPI routes & WebSocket managers
+│   ├── faults/             # Fault injection YAMLs (OOM, CrashLoop, etc.)
+│   ├── tests/              # Pytest suite for agents and tools
+│   ├── tools/              # Kubectl, Scanner, and GitOps wrappers
+│   ├── Dockerfile          # Container definition for the API
+│   ├── main.py             # FastAPI entry point
+│   └── requirements.txt    # Python dependencies
+├── frontend/
+│   ├── public/             # Static assets (icons, favicons)
+│   ├── src/
+│   │   ├── components/     # UI components (ClusterMap, etc.)
+│   │   ├── assets/         # Images and SVG assets
+│   │   ├── App.tsx         # Main Dashboard logic
+│   │   └── main.tsx        # React entry point
+│   ├── Dockerfile          # Container definition for the UI
+│   ├── tailwind.config.js  # Styling configuration
+│   └── package.json        # Node.js dependencies
+├── k8s/                    # Online Boutique base manifests
+├── docs/                   # Reports and implementation plans
+├── docker-compose.yml      # Orchestration for local development
+├── cloudbuild.yaml         # CI/CD pipeline definition
+└── README.md               # Documentation
+```
 
 ---
 *Built for the H2H-Latency-Legends Hackathon.*
