@@ -94,17 +94,22 @@ KubeAssist is built with a focus on **Transparency**, **Autonomy**, and **Produc
 
 ## 📁 Project Structure
 ```text
-KubeAssist/
+H2H-Latency-Legends-KubeAssist/
 ├── backend/
 │   ├── agents/             # LangGraph workflows & Correlation Engine
+│   ├── api/                # FastAPI routers & WebSocket managers
+│   ├── faults/             # Fault injection YAML manifests
 │   ├── tools/              # Kubectl, Metrics, and GitOps wrappers
-│   ├── faults/             # Fault injection scripts
-│   ├── api/                # FastAPI & WebSockets
-│   └── main.py             # FastAPI entry point
-├── frontend/               # React UI, Log Streamer, and Visual Map
-├── k8s/                    # Online Boutique Manifests
-├── docs/                   # One-page write-up & Demo notes
-└── README.md
+│   └── main.py             # Backend entry point (Port 8110)
+├── frontend/               # React Dashboard (Port 5173)
+│   ├── src/
+│   │   ├── components/     # ClusterMap & UI components
+│   │   └── App.tsx         # Main Dashboard logic
+│   └── .env                # Dashboard configuration
+├── k8s/                    # Online Boutique Kubernetes manifests
+├── docs/                   # Project documentation & reports
+├── GEMINI.md               # SRE System Prompt & Guidelines
+└── README.md               # Project overview & Roadmap
 ```
 
 ---

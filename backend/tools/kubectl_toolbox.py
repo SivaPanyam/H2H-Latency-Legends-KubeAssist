@@ -44,9 +44,9 @@ class KubectlToolbox:
                 "output": json.dumps({
                     "items": [
                         {"metadata": {"name": "frontend-v1-abc", "namespace": "default"}, "status": {"phase": "Running", "containerStatuses": [{"ready": True, "state": {"running": {}}}]}},
-                        {"metadata": {"name": "paymentservice-v1-def", "namespace": "default"}, "status": {"phase": "Running", "containerStatuses": [{"ready": False, "state": {"terminated": {"reason": "OOMKilled"}}}]}},
-                        {"metadata": {"name": "cartservice-v1-pqr", "namespace": "default"}, "status": {"phase": "Running", "containerStatuses": [{"ready": False, "state": {"waiting": {"reason": "CrashLoopBackOff"}}}]}},
-                        {"metadata": {"name": "adservice-v1-stu", "namespace": "default"}, "status": {"phase": "Pending", "containerStatuses": [{"ready": False, "state": {"waiting": {"reason": "ContainerCreating"}}}]}},
+                        {"metadata": {"name": "paymentservice-v1-def", "namespace": "default"}, "status": {"phase": "Running", "containerStatuses": [{"ready": True, "state": {"running": {}}}]}},
+                        {"metadata": {"name": "cartservice-v1-pqr", "namespace": "default"}, "status": {"phase": "Running", "containerStatuses": [{"ready": True, "state": {"running": {}}}]}},
+                        {"metadata": {"name": "adservice-v1-stu", "namespace": "default"}, "status": {"phase": "Running", "containerStatuses": [{"ready": True, "state": {"running": {}}}]}},
                         {"metadata": {"name": "shippingservice-v1-ghi", "namespace": "default"}, "status": {"phase": "Running", "containerStatuses": [{"ready": True, "state": {"running": {}}}]}},
                         {"metadata": {"name": "checkoutservice-v1-jkl", "namespace": "default"}, "status": {"phase": "Running", "containerStatuses": [{"ready": True, "state": {"running": {}}}]}},
                         {"metadata": {"name": "emailservice-v1-mno", "namespace": "default"}, "status": {"phase": "Running", "containerStatuses": [{"ready": True, "state": {"running": {}}}]}},
@@ -61,9 +61,9 @@ class KubectlToolbox:
             mock_metrics = [
                 "NAME                           CPU(cores)   MEMORY(bytes)",
                 "frontend-v1-abc                15m          64Mi",
-                "paymentservice-v1-def          450m         128Mi",
+                "paymentservice-v1-def          10m          32Mi",
                 "cartservice-v1-pqr             12m          48Mi",
-                "adservice-v1-stu               0m           0Mi",
+                "adservice-v1-stu               8m           24Mi",
                 "shippingservice-v1-ghi         8m           32Mi",
                 "checkoutservice-v1-jkl         20m          96Mi",
                 "emailservice-v1-mno            5m           16Mi",
@@ -76,39 +76,19 @@ class KubectlToolbox:
         elif "top" in cmd and "nodes" in cmd:
             return {"success": True, "output": "NAME       CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%\nminikube   850m         12%    2.4Gi           25%"}
         elif "logs" in cmd:
-            service = pod_name.split('-')[0]
-            if "payment" in service:
-                return {"success": True, "output": f"2026-04-22 14:00:01 [ERROR] {pod_name}: Connection timeout to sql-db\n2026-04-22 14:00:05 [FATAL] {pod_name}: Service terminated due to OutOfMemory (OOMKilled)"}
-            elif "cart" in service:
-                return {"success": True, "output": f"2026-04-22 14:05:00 [ERROR] {pod_name}: CrashLoopBackOff: process exited with status 1"}
-            elif "frontend" in service:
-                return {"success": True, "output": f"2026-04-22 14:05:10 [INFO] {pod_name}: Rendering product list for user 8823\n2026-04-22 14:05:12 [DEBUG] {pod_name}: API Call to /api/products took 142ms"}
-            return {"success": True, "output": f"2026-04-22 14:10:00 [INFO] {pod_name}: Service is healthy and listening on port 8080"}
+            return {"success": True, "output": f"2026-04-22 14:10:00 [INFO] {pod_name}: Service is healthy and listening on port 8080\n2026-04-22 14:15:00 [INFO] {pod_name}: Heartbeat check passed"}
         elif "describe" in cmd:
             service = pod_name.split('-')[0]
             status = "Running"
             reason = "Healthy"
             events = "Normal   Pulled   10m                kubelet            Container image pulled successfully"
             
-            if "payment" in service:
-                status = "Terminated"
-                reason = "OOMKilled"
-                events = "Warning  BackOff  1m (x5 over 5m)   kubelet            Back-off restarting failed container"
-            elif "cart" in service:
-                status = "Waiting"
-                reason = "CrashLoopBackOff"
-                events = "Warning  BackOff  1m (x5 over 5m)   kubelet            Back-off restarting failed container"
-            elif "adservice" in service:
-                status = "Pending"
-                reason = "ContainerCreating"
-                events = "Normal   Scheduled  10m                default-scheduler  Successfully assigned default/adservice to minikube"
-            
             return {
                 "success": True, 
                 "output": f"Name: {pod_name}\nStatus: {status}\nReason: {reason}\nNamespace: default\nNode: minikube/192.168.49.2\nLabels: app={service}\nEvents: \n  Type     Reason   Age                From               Message\n  ----     ------   ----               ----               -------\n  {events}"
             }
         elif "get" in cmd and "events" in cmd:
-            return {"success": True, "output": "LAST SEEN   TYPE      REASON    OBJECT                      MESSAGE\n1m          Warning   BackOff   pod/paymentservice-v1-def   Back-off restarting failed container"}
+            return {"success": True, "output": "LAST SEEN   TYPE      REASON    OBJECT                      MESSAGE\n10m         Normal    Scheduled pod/frontend-v1-abc         Successfully assigned default/frontend-v1-abc to minikube"}
         
         return {"success": True, "output": "{}" if "-o" in cmd and "json" in cmd else "Mock output for command: " + " ".join(cmd)}
 

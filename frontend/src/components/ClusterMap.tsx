@@ -70,7 +70,7 @@ export default function ClusterMap({ activeService, podStatuses = {}, onNodeClic
         let bgColor = '#0284c7'; // Default Running Blue
         let borderColor = '#38bdf8';
         
-        if (status.includes('BackOff') || status.includes('Error') || status.includes('Failed')) {
+        if (status.includes('BackOff') || status.includes('Error') || status.includes('Failed') || status.includes('Terminated') || status.includes('OOM')) {
           bgColor = '#ef4444'; // Red for failures
           borderColor = '#f87171';
         } else if (status.includes('Pending') || status.includes('Creating') || status.includes('Waiting')) {
