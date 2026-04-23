@@ -1,8 +1,6 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import {
   ReactFlow,
-  MiniMap,
-  Controls,
   Background,
   useNodesState,
   useEdgesState,
@@ -47,7 +45,7 @@ interface ClusterMapProps {
 
 export default function ClusterMap({ activeService, podStatuses = {}, onNodeClick }: ClusterMapProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [edges] = useEdgesState(initialEdges);
 
   const handleNodeClick = (_: any, node: any) => {
     if (onNodeClick) {
@@ -110,7 +108,6 @@ export default function ClusterMap({ activeService, podStatuses = {}, onNodeClic
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
         fitView
         colorMode="dark"

@@ -1,116 +1,127 @@
 # ☸️ KubeAssist: Agentic AI Ops Assistant for Kubernetes
 
-> **A Production-Grade, AI-powered web assistant designed to monitor, diagnose, and remediate Kubernetes clusters through Cross-Signal Correlation and GitOps workflows.**
+KubeAssist is a Production-Grade AI "Autopilot" for Kubernetes SREs. It transforms the traditionally manual diagnostic process into an automated, multi-signal reasoning journey, enabling engineers to manage complex microservices with unprecedented speed and safety.
 
 ---
 
-## 📖 Overview
-KubeAssist is a specialized AI agent that acts as an "Autopilot" for Kubernetes SREs. It accepts natural language queries, autonomously gathers cluster data, reasons over the output using multiple signals (Logs, Metrics, Events), and provides actionable root-cause summaries and "Shift-Left" fixes.
+## 🚀 Getting Started
 
-This project is built to satisfy the **Agentic AI Ops Assistant for Kubernetes Clusters** challenge, going beyond basic chat by featuring a full agentic loop, fault injection scenarios, a visual reasoning web interface, and GitOps integration.
+Follow these steps to set up KubeAssist in your local environment using Minikube.
 
----
+### 📋 Prerequisites
 
-## 🎯 Problem Statement
-Managing complex microservices on Kubernetes often leads to "Alert Fatigue." When a service fails, engineers must manually execute dozens of commands to find the root cause, often causing "Configuration Drift" when applying hotfixes. **KubeAssist** automates this diagnostic journey by translating intent into action and proposing codified fixes.
-
----
-
-## 🏗️ Architecture & Scope
-KubeAssist is built with a focus on **Transparency**, **Autonomy**, and **Production Readiness**:
-
-1.  **Web Interface (React + React Flow):** A dashboard to chat with the agent, view the "Thought Stream", and see a live **Visual Cluster Map** that highlights nodes the agent is currently investigating.
-2.  **Agentic Loop (LangGraph):** A stateful ReAct loop that plans debugging steps, executes tools, and evaluates observations.
-3.  **Cross-Signal Correlation Engine:** The agent doesn't just read logs; it automatically cross-references Logs, Metrics (Prometheus/top), and Kubernetes Events to pinpoint exact failures.
-4.  **Tool Layer:** Custom Python wrappers for `kubectl`, metrics APIs, and GitHub/GitLab PR generation.
-5.  **Local Cluster:** Minikube/kind running **Google’s Online Boutique** microservices.
+Ensure you have the following installed:
+- [Minikube](https://minikube.sigs.k8s.io/docs/start/)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/)
+- [Node.js (v18+)](https://nodejs.org/)
+- [Python 3.12+](https://www.python.org/)
+- [Trivy](https://aquasecurity.github.io/trivy/latest/getting-started/installation/) (Optional, for security audits)
 
 ---
 
-## 🚀 Unique Value Propositions (UVPs)
-- **Visual Thought-Stream:** Watch the agent's brain work in real-time as it navigates a dynamic topology map of your cluster.
-- **Cross-Signal Correlation:** Identifies complex issues like "Pod crashed due to hitting 128MB memory limit during a traffic spike" by correlating events and metrics.
-- **"Shift-Left" Remediation (GitOps):** Prevents configuration drift. Instead of blindly running `kubectl apply`, KubeAssist drafts a Pull Request with the fix (e.g., bumping memory limits) for human approval.
-- **Natural Language to Kubectl:** Translates complex intents into precise diagnostic commands.
+### 1. Cluster Initialization
 
----
+Start Minikube and enable the metrics-server (required for resource monitoring):
 
-## 🛠️ Tech Stack
-- **LLM:** Google Gemini 1.5 Pro / Ollama
-- **Orchestration:** LangGraph (for complex stateful reasoning)
-- **Backend:** Python + FastAPI (Streaming WebSockets for logs)
-- **Frontend:** React + Tailwind CSS + React Flow (for cluster visualization)
-- **K8s Environment:** Minikube / kind + Google Online Boutique
+```bash
+# Start Minikube
+minikube start --cpus 4 --memory 8192
 
----
+# Enable Metrics Server
+minikube addons enable metrics-server
 
-## 🗓️ 6-Day Implementation Plan
-
-### **Day 1: Cluster Setup & Fault Injection (Completed ✅)**
-- [x] **Cluster Initialization:** Successfully set up Minikube with the Windows x64 environment.
-- [x] **Microservices Deployment:** Deployed the full "Google Online Boutique" (11 microservices) for realistic diagnostic testing.
-- [x] **Fault Suite Creation:** Developed YAML scenarios for `CrashLoopBackOff` (cartservice), `OOMKilled` (paymentservice), and `Pending` pods (adservice).
-- [x] **Health Check:** Verified all baseline services reached a "Running" state before fault injection.
-
-### **Day 2: Backend Infrastructure & Cross-Signal Tooling (Completed ✅)**
-- [x] **FastAPI Core:** Developed the backend server with WebSocket support for real-time "Thought-Stream" visualization.
-- [x] **KubectlToolbox:** Implemented secure Python wrappers for `get pods`, `describe`, `logs`, `events`, and `top pods` (for metric-based correlation).
-- [x] **GitOpsToolbox:** Built a "Shift-Left" remediation tool to draft Git diffs and Pull Requests for human-approved fixes.
-- [x] **Enterprise Frontend Foundation:** Initialized a React + Vite + Tailwind CSS dashboard with a professional Operations Center layout.
-
-### **Day 3: The Agentic Loop (LangGraph) & Correlation Engine (Completed ✅)**
-- [x] **Agent State Definition:** Created a robust `TypedDict` for the agent's memory (conversational history, commands, and observations).
-- [x] **LangGraph Workflow:** Developed the state machine using `StateGraph`, featuring a cyclic Reasoner-Executor loop powered by **Gemini 1.5 Pro**.
-- [x] **API Integration:** Successfully connected the LangGraph workflow to the FastAPI `/api/query` endpoint for end-to-end communication.
-
-### **Day 4: "Shift-Left" GitOps Remediation (Completed ✅)**
-- [x] **GitOpsToolbox:** Implemented surgical YAML patching for local manifests (supports complex lists like containers/env).
-- [x] **Fix Generator:** Developed the agentic capability to generate `git diffs` and propose Pull Requests instead of direct cluster mutations.
-- [x] **Tool Integration:** Refactored the LangGraph agent to use proper LangChain tool-calling for reliable investigation and remediation.
-
-
-### **Day 5: Web Interface (The Command Center & Visual Map) (Completed ✅)**
-- [x] Build the React Chat UI with a real-time **"Reasoning Stream"** side panel.
-- [x] Implement a **Live Cluster Map** (using React Flow or D3) that visually highlights pods/services as the agent queries them.
-- [x] Integrate WebSocket streaming from the FastAPI backend.
-
-### **Day 6: Deliverables & Final Polish (Completed ✅)**
-- [x] Record the **Working Demo** showing 5 scenarios, including the visual map and GitOps PR proposal. (Internal project demo completed)
-- [x] Write the **One-page Report**: "What worked, what didn't, and production scaling (200+ services)".
-- [x] Finalize `README.md` and push source code.
-
-### **Day 4-7: Comprehensive Audit & Operational Intelligence (Completed ✅)**
-- [x] **Comprehensive One-Shot Audit System:** Transitioned from a reactive chatbot to a proactive scanner. Implemented a system that aggregates all cluster context (Resources, Metrics, and Trivy Security Scans) into a single "Big Gulp" analysis using Gemini 2.5 Flash's massive context window.
-- [x] **Operational Intelligence Dashboard:** 
-    - **Interactive Cluster Map:** Added real-time telemetry streaming (CPU, Memory, Logs, Events) upon node selection.
-    - **Performance Dashboard:** Built a cluster-wide resource utilization view featuring top-consuming pods and node health.
-    - **Security Audit Center:** Integrated one-click comprehensive scans with direct GitOps remediation paths.
-- [x] **Model Optimization:** Upgraded the reasoning engine to **Gemini 2.5 Flash** for superior performance and reduced latency in operational tasks.
-- [x] **System Robustness:** Fixed backend import bugs, resolved port conflicts, and implemented enhanced error handling in the React UI.
-
-
-
----
-
-## 📁 Project Structure
-```text
-H2H-Latency-Legends-KubeAssist/
-├── backend/
-│   ├── agents/             # LangGraph workflows & Correlation Engine
-│   ├── api/                # FastAPI routers & WebSocket managers
-│   ├── faults/             # Fault injection YAML manifests
-│   ├── tools/              # Kubectl, Metrics, and GitOps wrappers
-│   └── main.py             # Backend entry point (Port 8110)
-├── frontend/               # React Dashboard (Port 5173)
-│   ├── src/
-│   │   ├── components/     # ClusterMap & UI components
-│   │   └── App.tsx         # Main Dashboard logic
-│   └── .env                # Dashboard configuration
-├── k8s/                    # Online Boutique Kubernetes manifests
-├── docs/                   # Project documentation & reports
-├── GEMINI.md               # SRE System Prompt & Guidelines
-└── README.md               # Project overview & Roadmap
+# Verify the cluster is running
+kubectl get nodes
 ```
+
+### 2. Microservices Deployment
+
+Deploy Google's **Online Boutique** microservices to create a realistic production-like environment:
+
+```bash
+kubectl apply -f k8s/online-boutique.yaml
+
+# Wait for all pods to be ready
+kubectl get pods --watch
+```
+
+### 3. Backend Setup
+
+The backend is a FastAPI server that handles the agentic reasoning loop.
+
+```bash
+# Navigate to project root
+cd H2H-Latency-Legends-KubeAssist
+
+# Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
+
+# Install dependencies
+pip install -r backend/requirements.txt
+
+# Create a .env file in the root directory
+echo "GOOGLE_API_KEY=your_api_key_here" > .env
+echo "PORT=8110" >> .env
+echo "ALLOWED_ORIGINS=http://localhost:5173" >> .env
+
+# Run the backend
+python -m backend.main
+```
+
+### 4. Frontend Setup
+
+The frontend is a React-based dashboard with a visual cluster map.
+
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Create a .env file in the frontend directory
+echo "VITE_API_URL=http://localhost:8110" > .env
+
+# Run the frontend
+npm run dev
+```
+
+---
+
+## 🛠️ Key Features & Workflows
+
+### 🔍 One-Shot Audit
+Aggregates full cluster context (Security, Performance, Config) and uses Gemini to analyze all signals simultaneously. The results are categorized into actionable reports with one-click GitOps remediation paths.
+
+### 🩺 Reactive Troubleshooting
+When an incident occurs (e.g., a Pod crashing), select the Pod in the **Cluster Map**. KubeAssist will automatically stream logs, metrics, and events to identify the root cause using its cross-signal correlation engine.
+
+### 🛡️ Fault Injection (For Testing)
+Test KubeAssist's diagnostic capabilities by injecting real-world faults:
+
+```bash
+# Example: Inject an OOMKill fault into the paymentservice
+kubectl apply -f backend/faults/oom-kill.yaml
+```
+
+---
+
+## 🏗️ System Architecture
+
+1.  **Reasoning Engine (LangGraph + Gemini 2.5 Flash):** A stateful agentic loop that plans investigations and evaluates telemetry.
+2.  **Operational Intelligence Layers:** A dynamic frontend map that visualizes microservices topology and streams live telemetry.
+3.  **GitOps Remediation:** Instead of direct cluster mutations, the agent drafts surgical Git diffs for human approval, ensuring system integrity.
+
+---
+
+## 📂 Project Structure
+
+- `backend/agents/`: LangGraph workflows and reasoning logic.
+- `backend/tools/`: Custom wrappers for `kubectl`, `metrics`, and `GitOps`.
+- `backend/faults/`: YAML manifests for simulating production failures.
+- `frontend/src/App.tsx`: Unified dashboard managing Map and Assistant modes.
+- `k8s/`: Base manifests for the microservices environment.
 
 ---
 *Built for the H2H-Latency-Legends Hackathon.*

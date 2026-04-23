@@ -3,36 +3,35 @@ import {
   Activity, 
   LayoutDashboard, 
   MessageSquare, 
-  Settings, 
   Box, 
   Terminal, 
   Send,
   CheckCircle2,
-  Clock,
   ShieldAlert,
   Zap,
   RefreshCcw,
-  AlertTriangle,
-  ExternalLink,
+  BarChart3,
+  Server,
   Cpu,
   Database,
   FileText,
-  BarChart3,
-  Server
+  AlertTriangle
 } from 'lucide-react';
 import ClusterMap from './components/ClusterMap';
 
-const SidebarItem = ({ icon: Icon, label, active = false, onClick }: { icon: any, label: string, active?: boolean, onClick?: () => void }) => (
-  <div 
-    onClick={onClick}
-    className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all ${active ? 'bg-accent/10 text-accent' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'}`}
-  >
-    <Icon size={20} />
-    <span className="font-medium text-sm">{label}</span>
-  </div>
-);
+// Types
+type Message = {
+  role: 'user' | 'agent';
+  content: string;
+};
 
-type Message = { role: 'user' | 'agent'; content: string };
+type PodDetails = {
+  name: string;
+  status: string;
+  metrics: { cpu: string; memory: string };
+  logs: string;
+  events: string;
+};
 
 type ClusterIssue = {
   id: string;
@@ -48,14 +47,6 @@ type ClusterIssue = {
 type AuditReport = {
   summary: string;
   issues: ClusterIssue[];
-};
-
-type PodDetails = {
-  name: string;
-  status: string;
-  metrics: { cpu: string, memory: string };
-  logs: string;
-  events: string;
 };
 
 type PerformanceData = {
@@ -564,5 +555,26 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+interface SidebarItemProps {
+  icon: any;
+  label: string;
+  active?: boolean;
+  onClick: () => void;
+}
+
+const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, active, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+      active 
+        ? 'bg-accent/10 text-accent border border-accent/20 shadow-lg shadow-accent/5' 
+        : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/50'
+    }`}
+  >
+    <Icon size={18} />
+    {label}
+  </button>
+);
 
 export default App;

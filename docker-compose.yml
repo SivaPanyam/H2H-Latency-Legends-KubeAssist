@@ -1,0 +1,24 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8110:8110"
+    volumes:
+      - ~/.kube:/root/.kube:ro
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - KUBEASSIST_API_KEY=${KUBEASSIST_API_KEY:-test-api-key}
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost
+    restart: always
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: always

@@ -1,0 +1,12 @@
+steps:
+  # Build and push Backend
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/kubeassist-repo/backend', '-f', 'backend/Dockerfile', '.']
+  
+  # Build and push Frontend
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/kubeassist-repo/frontend', '-f', 'frontend/Dockerfile', '.']
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/kubeassist-repo/backend'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/kubeassist-repo/frontend'
